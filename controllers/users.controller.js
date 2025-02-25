@@ -42,6 +42,12 @@ const getUserById = async (req, res) => {
 };
 
 const updateUser = (req, res) => {
+  // try catch block
+  //
+  // Zod schema validation
+  // search user by id
+  // update user
+  // return response
   res.send('Update user');
 };
 
