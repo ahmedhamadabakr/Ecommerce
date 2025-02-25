@@ -3,6 +3,7 @@ const morgan = require('morgan');
 const errorhandler = require('errorhandler');
 const mongoose = require('mongoose');
 const authenticationRouter = require('./routes/authentication.routes');
+const userRouter = require('./routes/users.routes');
 
 const app = express();
 const port = 3000;
@@ -18,6 +19,7 @@ app.get('/', (req, res) => {
 });
 
 app.use(authenticationRouter);
+app.use(userRouter);
 
 app.use(errorhandler());
 
