@@ -4,6 +4,7 @@ const errorhandler = require("errorhandler");
 const mongoose = require("mongoose");
 
 const authenticationRouter = require("./routes/authentication.routes");
+const usersRouter = require("./routes/users.routes");
 
 const app = express();
 const port = 8000;
@@ -18,6 +19,7 @@ app.get("/", (req, res) => {
 });
 
 app.use(authenticationRouter);
+app.use(usersRouter);
 
 app.post("/api/posts", (req, res) => {
   console.log(req.body);

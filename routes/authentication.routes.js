@@ -13,12 +13,5 @@ authenticationRouter.post("/api/login", login);
 
 authenticationRouter.post("/api/logout", logout);
 
-// authenticationRouter.get("/api/users", (req, res) => {
-//   res.send("Hello World!");
-// });
-
-// authenticationRouter.get("/api/users/:postId", (req, res) => {
-//   res.send("Hello World!");
-// });
 
 module.exports = authenticationRouter;

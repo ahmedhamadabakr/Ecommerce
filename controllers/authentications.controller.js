@@ -1,11 +1,9 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const {
-  registerSchema,
-} = require("../requests/authentication/regester.Schema");
+
+const {registerSchema} = require("../requests/authentication/regester.Schema");
 const { loginSchema } = require("../requests/authentication/login.Schema");
 const User = require("../models/user.model");
-const e = require("express");
 const saltRounds = 10;
 
 const register = async (req, res) => {
@@ -44,7 +42,7 @@ const login = async (req, res) => {
     const data = req.body;
     loginSchema.parse(data);
 
-    const user = await User.find({ email: data.email });
+    const user = await User.findOne({ email: data.email });
 
     if (!user) {
       res.status(400).json({
@@ -66,11 +64,11 @@ const login = async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      "secret",
+      { expiresIn: "7h" }
     );
 
-    res.setCookie("token", token);
+
 
     res.json({
       message: "User registered successfully",
