@@ -15,9 +15,9 @@ usersRouter.get("/api/users", getAllUsers);
 usersRouter.get("/api/users/:userId", getUserById);
 
 // update user
-usersRouter.put("/api/update/:id", updateUser);
+usersRouter.put("/api/update/:userId", updateUser);
 
 // delete user
-usersRouter.delete("/api/delete/:id", deleteUser);
+usersRouter.delete("/api/delete/:userId", deleteUser);
 
 module.exports = usersRouter;

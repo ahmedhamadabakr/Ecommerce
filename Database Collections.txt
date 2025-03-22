@@ -1,0 +1,23 @@
+Database Collections:
+- Users
+  - id
+  - firstname (string, required)
+  - lastname (string, required)
+  - email (string, required)
+  - password (string, required)
+  - gender (male or female, optional)
+  - address (string, optional)
+
+- Products
+  - id
+  - name (string, required)
+  - price (number, required)
+  - description (string, optional)
+  - image (string, optional)
+
+- Orders
+  - id
+  - user (reference to Users)
+  - products[] (reference to Products)
+  - total (number, required)
+  - status (string, required)
