@@ -77,7 +77,7 @@ const login = async (req, res) => {
       token: token,
       data: true,
     });
-    
+
     res.send("login");
   } catch (error) {
     res.status(500).json({
@@ -90,6 +90,7 @@ const login = async (req, res) => {
 
 const logout = (req, res) => {
   try {
+    res.clearCookie("token");
     res.json({
       message: "User logged out successfully",
       data: true,
