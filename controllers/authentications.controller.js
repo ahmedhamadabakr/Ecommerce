@@ -1,7 +1,9 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const {registerSchema} = require("../requests/authentication/regester.Schema");
+const {
+  registerSchema,
+} = require("../requests/authentication/regester.Schema");
 const { loginSchema } = require("../requests/authentication/login.Schema");
 const User = require("../models/user.model");
 const saltRounds = 10;
@@ -62,13 +64,9 @@ const login = async (req, res) => {
       return;
     }
 
-    const token = jwt.sign(
-      { id: user._id, email: user.email },
-      "secret",
-      { expiresIn: "7h" }
-    );
-
-
+    const token = jwt.sign({ id: user._id, email: user.email }, "secret", {
+      expiresIn: "7h",
+    });
 
     res.json({
       message: "User registered successfully",
