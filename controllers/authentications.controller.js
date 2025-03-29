@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const jwtConfing = require("../config/jwt");
 
 const {
   registerSchema,
@@ -22,6 +23,7 @@ const register = async (req, res) => {
       gender: data.gender,
       address: data.address,
       age: data.age,
+      phone: data.phone,
     });
 
     res.json({
@@ -64,9 +66,13 @@ const login = async (req, res) => {
       return;
     }
 
-    const token = jwt.sign({ id: user._id, email: user.email }, "secret", {
-      expiresIn: "7h",
-    });
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      jwtConfing.secret,
+      {
+        expiresIn: "7h",
+      }
+    );
 
     res.json({
       message: "User registered successfully",

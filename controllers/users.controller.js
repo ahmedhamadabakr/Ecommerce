@@ -1,5 +1,5 @@
 const User = require("../models/user.model");
-const objectIdschema = require("../requests/objectId");
+const userVaildation = require("../requests/users/user.vaildation");
 
 const getAllUsers = async (req, res) => {
   try {
@@ -40,7 +40,7 @@ const getAllUsers = async (req, res) => {
 const getUserById = async (req, res) => {
   try {
     const id = req.params.userId;
-    objectIdschema.parse({ userId: id });
+    userVaildation.parse({ userId: id });
 
     const isUser = await User.findById(id);
     console.log(isUser);
@@ -56,6 +56,7 @@ const getUserById = async (req, res) => {
         email: isUser.email,
         firstName: isUser.firstName,
         lastName: isUser.lastName,
+        phone: isUser.phone,
       },
     });
   } catch (error) {
@@ -66,7 +67,12 @@ const getUserById = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const id = req.params.userId;
-    objectIdschema.parse({ userId: id }); //validate the id
+    try {
+      userVaildation.parse({ userId: id }); //validate the id
+    } catch (error) {
+      res.status(400).send("Invalid user ID");
+      return;
+    }
     const user = await User.findById(id); //find the user by id
 
     if (!user) {
@@ -76,13 +82,15 @@ const updateUser = async (req, res) => {
 
     await User.updateOne({ _id: id }, { $set: { ...req.body } }); //update the user with the new data
 
+    const userAfterUpdate = await User.findById(id);// call user after up date
+    
     res.status(200).json({
       message: "User updated",
       status: "success",
       data: {
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        email: userAfterUpdate.email,
+        firstName: userAfterUpdate.firstName,
+        lastName: userAfterUpdate.lastName,
       },
     });
   } catch (error) {
@@ -93,7 +101,7 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const id = req.params.userId;
-    objectIdschema.parse({ userId: id }); //validate the id
+    userVaildation.parse({ userId: id }); //validate the id
 
     const user = await User.findById(id); //find the user by id
     if (!user) {

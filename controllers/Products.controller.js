@@ -1,6 +1,6 @@
-const { productsSchema } = require("../requests/products/products.schema");
-const { productIdschema } = require("../requests/objectId");
-const Product = require("../models/Products.model");
+const productsSchema = require("../requests/products/products.schema");
+const productIdschema = require("../requests/products/product.validation");
+const Product = require("../models/products.model");
 
 const getAllProducts = async (req, res) => {
   try {
@@ -21,9 +21,12 @@ const getAllProducts = async (req, res) => {
       message: "Products retrieved successfully",
       data: products.map((product) => ({
         title: product.title,
-        content: product.content,
+        description: product.description,
         image: product.image,
+        price: product.price,
         category: product.category,
+        categoryImage: product.categoryImage,
+        quantity: product.quantity,
       })),
       pagination: {
         totalProducts,
@@ -58,9 +61,10 @@ const getProductById = async (req, res) => {
       status: "success",
       data: {
         title: isProduct.title,
-        content: isProduct.content,
-        image: isProduct.image,
+        description: isProduct.description,
+        categoryImage: isProduct.categoryImage,
         category: isProduct.category,
+        quantity: isProduct.quantity,
       },
     });
   } catch (error) {
@@ -70,23 +74,25 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    const data = req.body;
-    productsSchema.parse(data);
+    const data = productsSchema.parse(req.body);
 
-    await Product.create({
+    const newProduct = await Product.create({
       title: data.title,
-      content: data.content,
-      image: data.image,
+      description: data.description,
+      price: data.price,
       category: data.category,
+      categoryImage: data.categoryImage,
+      quantity: data.quantity,
     });
 
-    res.json({
+    res.status(201).json({
       message: "Product created successfully",
-      data: true,
+      data: newProduct,
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
+    res.status(400).json({
+      message: "Validation error",
+      error: error.message,
       data: false,
     });
   }
@@ -98,20 +104,24 @@ const updateProduct = async (req, res) => {
     productIdschema.parse({ productId: id });
     const data = req.body;
     productsSchema.parse(data);
-    const product = await Product.findById(id);
-    if (!product) {
+    const cheackproduct = await Product.findById(id);
+    if (!cheackproduct) {
       res.status(404).send("Product not found");
       return;
     }
     await Product.updateOne({ _id: id }, { $set: { ...req.body } });
+    const product = await Product.findById(id);
+
     res.status(200).json({
       message: "Product updated",
       status: "success",
       data: {
         title: product.title,
-        content: product.content,
-        image: product.image,
+        description: product.description,
+        price: product.price,
+        categoryImage: product.categoryImage,
         category: product.category,
+        quantity: product.quantity,
       },
     });
   } catch (error) {

@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const authenticationRouter = require("./routes/authentication.routes");
 const usersRouter = require("./routes/users.routes");
 const productsRouter = require("./routes/products.routes");
+const orederRouter = require("./routes/order.routes");
 
 const app = express();
 const port = 8000;
@@ -22,6 +23,7 @@ app.get("/", (req, res) => {
 app.use(authenticationRouter);
 app.use(usersRouter);
 app.use(productsRouter);
+app.use(orederRouter);
 
 app.post("/api/posts", (req, res) => {
   console.log(req.body);

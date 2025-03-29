@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  phone: {
+    type: String,
+    required: true,
+  },
   password: {
     type: String,
     required: true,
@@ -42,7 +46,6 @@ const userSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-
 });
 
 const User = mongoose.model("User", userSchema); // User is the name of the collection in the database
