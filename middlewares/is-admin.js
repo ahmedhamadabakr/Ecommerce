@@ -1,4 +1,3 @@
-const db = require("../db");
 const User = require("../models/user.model");
 
 async function isAdmin(req, res, next) {
