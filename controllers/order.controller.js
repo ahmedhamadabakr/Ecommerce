@@ -76,7 +76,7 @@ const getOrderById = async (req, res) => {
 const createOrder = async (req, res) => {
   try {
     const { quantity, userId } = req.body;
-    const products = req.params.productId;
+    const productId = req.params.productId;
 
     if (!quantity || typeof quantity !== "number" || quantity <= 0) {
       return res.status(400).json({ message: "Invalid quantity provided" });
@@ -90,29 +90,29 @@ const createOrder = async (req, res) => {
     let totalAmount = 0;
     const orderItems = [];
 
-    const product = await Product.findById(products);
+    const product = await Product.findById(productId);
 
     if (!product) {
       return res
         .status(404)
-        .json({ message: `Product not found: ${products}` });
+        .json({ message: `Product not found: ${product}` });
     }
 
-    if (products.stock < products.quantity) {
+    if (product.quantity < product.quantity) {//---------
       return res.status(400).json({
-        message: `Insufficient stock for product: ${products}`,
+        message: `Insufficient stock for product: ${product}`,
       });
     }
 
-    const itemTotal = products.price * products.quantity;
+    const itemTotal = product.price * quantity;
     totalAmount += itemTotal;
 
     orderItems.push({
       product: product._id,
-      quantity: item.quantity,
+      quantity: quantity,
       price: product.price,
     });
-    product.stock -= item.quantity;
+    product.quantity -= item.quantity;//---------
     await product.save();
 
     const order = new Order({
