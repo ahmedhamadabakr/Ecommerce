@@ -15,7 +15,10 @@ productRouter.get("/api/products", getAllProducts);
 
 productRouter.get("/api/products/:productId", getProductById);
 
-productRouter.post("/api/products", mustBeLoggedIn, isAdmin, createProduct);
+productRouter.post("/api/products",
+  mustBeLoggedIn, isAdmin,
+
+  createProduct);
 
 productRouter.put(
   "/api/products/:productId",

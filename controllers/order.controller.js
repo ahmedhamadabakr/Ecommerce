@@ -2,6 +2,8 @@ const User = require("../models/user.model");
 const Product = require("../models/products.model");
 const Order = require("../models/orders.models");
 const orderIdschema = require("../requests/orders/order.vaildation");
+const mongoose = require("mongoose");
+
 
 const getAllOrders = async (req, res) => {
   try {
@@ -50,7 +52,7 @@ const getAllOrders = async (req, res) => {
 const getOrderById = async (req, res) => {
   try {
     const id = req.params.orderId;
-    orderIdschema.parse({ orderId: id });
+  orderIdschema.parse({ orderId: id });
 
     // البحث عن الطلب مع تحميل بيانات المستخدم والمنتج
     const order = await Order.findById(id);
@@ -73,123 +75,273 @@ const getOrderById = async (req, res) => {
   }
 };
 
+/**
+ * Create a new order
+ * @route POST /products/:productId/orders
+ */
 const createOrder = async (req, res) => {
+  // Start a session for transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { quantity, userId } = req.body;
     const productId = req.params.productId;
 
-    if (!quantity || typeof quantity !== "number" || quantity <= 0) {
-      return res.status(400).json({ message: "Invalid quantity provided" });
-    }
-
-    const findUser = await User.findById(userId);
-    if (!findUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    let totalAmount = 0;
-    const orderItems = [];
-
-    const product = await Product.findById(productId);
-
-    if (!product) {
-      return res
-        .status(404)
-        .json({ message: `Product not found: ${product}` });
-    }
-
-    if (product.quantity < product.quantity) {//---------
-      return res.status(400).json({
-        message: `Insufficient stock for product: ${product}`,
+    // Validate input
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ 
+        status: "error", 
+        message: "Invalid user ID format" 
       });
     }
 
-    const itemTotal = product.price * quantity;
-    totalAmount += itemTotal;
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ 
+        status: "error", 
+        message: "Invalid product ID format" 
+      });
+    }
 
-    orderItems.push({
+    if (!quantity || typeof quantity !== "number" || quantity <= 0) {
+      return res.status(400).json({ 
+        status: "error", 
+        message: "Invalid quantity provided. Must be a positive number" 
+      });
+    }
+
+    // Find user and product
+    const [user, product] = await Promise.all([
+      User.findById(userId).session(session),
+      Product.findById(productId).session(session)
+    ]);
+
+    // Validate user and product existence
+    if (!user) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({ 
+        status: "error", 
+        message: "User not found" 
+      });
+    }
+
+    if (!product) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({ 
+        status: "error", 
+        message: "Product not found" 
+      });
+    }
+
+    // Check product availability
+    if (product.quantity < quantity) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({
+        status: "error",
+        message: "Insufficient stock",
+        data: {
+          available: product.quantity,
+          requested: quantity
+        }
+      });
+    }
+
+    // Calculate order details
+    const itemPrice = product.price;
+    const totalAmount = itemPrice * quantity;
+
+    // Create order item
+    const orderItem = {
       product: product._id,
       quantity: quantity,
-      price: product.price,
-    });
-    product.quantity -= item.quantity;//---------
-    await product.save();
+      price: itemPrice
+    };
 
+    // Create order
     const order = new Order({
       user: userId,
-      items: orderItems,
+      items: [orderItem],
       totalAmount,
+      status: "pending" // Default status
     });
 
-    await order.save();
-    res.status(201).json({
+    // Update product quantity
+    product.quantity -= quantity;
+    
+    // Save changes within transaction
+    await Promise.all([
+      order.save({ session }),
+      product.save({ session })
+    ]);
+
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json({
+      status: "success",
       message: "Order created successfully",
-      data: order,
+      data: {
+        orderId: order._id,
+        items: order.items,
+        totalAmount: order.totalAmount,
+        createdAt: order.created_at
+      }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Abort transaction on error
+    await session.abortTransaction();
+    session.endSession();
+    
+    console.error("Order creation error:", error);
+    return res.status(500).json({ 
+      status: "error", 
+      message: "Failed to create order",
+      error: error.message 
+    });
   }
 };
 
+/**
+ * Update an existing order
+ * @route PUT /orders/:orderId
+ */
 const updateOrder = async (req, res) => {
+  // Start a session for transaction
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const id = req.params.orderId;
-    orderIdschema.parse({ orderId: id });
+    const { orderId } = req.params;
+    const { quantity } = req.body;
 
-    const orderId = await Order.findById(id);
-    if (!orderId) {
-      res.status(404).send("order not found");
-      return;
+    // Validate orderId using Zod schema
+    try {
+      orderIdschema.parse({ orderId });
+    } catch (validationError) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid order ID format",
+        errors: validationError.errors
+      });
     }
 
-    const oldQuantity = orderId.quantity;
-    console.log(oldQuantity);
-
-    await Order.updateOne({ _id: id }, { $set: { ...req.body } });
-    const orderUpdate = await Order.findById(id);
-
-    const newQuantity = orderUpdate.quantity;
-    console.log(newQuantity);
-
-    const newValue = newQuantity - oldQuantity;
-    const oldBig = oldQuantity - newQuantity;
-
-    const resolvedProducts = [
-      {
-        product: orderUpdate.product,
-        quantity: orderUpdate.quantity,
-        oldBig,
-        newValue,
-      },
-    ];
-    if (newQuantity > oldQuantity) {
-      for (const p of resolvedProducts) {
-        await Product.updateOne(
-          { _id: p.product },
-          { $inc: { quantity: -p.newValue } }
-        );
-      }
+    // Validate quantity
+    if (!quantity || typeof quantity !== "number" || quantity <= 0) {
+      return res.status(400).json({
+        status: "error", 
+        message: "Invalid quantity provided. Must be a positive number"
+      });
     }
 
-    if (newQuantity < oldQuantity) {
-      for (const p of resolvedProducts) {
-        await Product.updateOne(
-          { _id: p.product },
-          { $inc: { quantity: p.oldBig } }
-        );
-      }
+    // Find order with session
+    const order = await Order.findById(orderId).session(session);
+    
+    if (!order) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({
+        status: "error",
+        message: "Order not found"
+      });
     }
-    res.status(200).json({
-      message: "Order Update success",
+
+    // Get first item from order
+    if (!order.items || order.items.length === 0) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({
+        status: "error",
+        message: "Order has no items"
+      });
+    }
+
+    const orderItem = order.items[0];
+    const oldQuantity = orderItem.quantity;
+    const quantityDifference = quantity - oldQuantity;
+
+    // If no change in quantity, return early
+    if (quantityDifference === 0) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(200).json({
+        status: "success",
+        message: "No changes needed - quantity remains the same",
+        data: {
+          orderId: order._id,
+          quantity: orderItem.quantity,
+          totalAmount: order.totalAmount
+        }
+      });
+    }
+
+    // Find product
+    const product = await Product.findById(orderItem.product).session(session);
+    
+    if (!product) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({
+        status: "error",
+        message: "Product not found"
+      });
+    }
+
+    // Check stock if increasing quantity
+    if (quantityDifference > 0 && product.quantity < quantityDifference) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({
+        status: "error",
+        message: "Insufficient stock",
+        data: {
+          available: product.quantity,
+          additionalNeeded: quantityDifference
+        }
+      });
+    }
+
+    // Update product quantity
+    product.quantity -= quantityDifference;
+    
+    // Update order
+    orderItem.quantity = quantity;
+    order.totalAmount = product.price * quantity;
+
+    // Save changes within transaction
+    await Promise.all([
+      order.save({ session }),
+      product.save({ session })
+    ]);
+
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(200).json({
       status: "success",
+      message: "Order updated successfully",
       data: {
-        id: orderUpdate._id,
-        quantity: orderUpdate.quantity,
-        created_at: orderUpdate.created_at,
-      },
+        orderId: order._id,
+        quantity: orderItem.quantity,
+        totalAmount: order.totalAmount,
+        updatedAt: new Date()
+      }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Abort transaction on error
+    await session.abortTransaction();
+    session.endSession();
+    
+    console.error("Order update error:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Failed to update order",
+      error: error.message
+    });
   }
 };
 

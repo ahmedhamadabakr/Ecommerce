@@ -22,7 +22,9 @@ orederRouter.get("/api/orders", mustBeLoggedIn, getAllOrders);
 
 orederRouter.get("/api/order/:orderId",mustBeLoggedIn, getOrderById);
 
-orederRouter.post("/api/order/:productId", mustBeLoggedIn, createOrder);
+orederRouter.post("/api/order/:productId",
+   //mustBeLoggedIn,
+    createOrder);
 
 orederRouter.put("/api/order/:orderId", mustBeLoggedIn, updateOrder);
 
