@@ -137,8 +137,8 @@ const createOrder = async (req, res) => {
 
     // Check product availability
     if (product.quantity < quantity) {
-      await session.abortTransaction();
-      session.endSession();
+      await session.abortTransaction();//if the product is not available, abort the transaction
+      session.endSession();//end the session
       return res.status(400).json({
         status: "error",
         message: "Insufficient stock",
