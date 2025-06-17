@@ -1,16 +1,16 @@
-// - Authentication
-//   - Register (Signup)
-//   - Login (Signin)
-//   - Logout
+const express = require("express");
+const {
+  register,
+  login,
+  logout,
+} = require("../controllers/authentications.controller");
+const mustBeLoggedIn = require("../middlewares/must-be-logged");
 
-const express = require('express');
-const authenticationController = require('../controllers/authentication.controller');
 const authenticationRouter = express.Router();
 
-authenticationRouter.post('/api/register', authenticationController.register);
-
-authenticationRouter.post('/api/login', authenticationController.login);
-
-authenticationRouter.post('/api/logout', authenticationController.logout);
+// Authentication routes
+authenticationRouter.post("/register", register);
+authenticationRouter.post("/login", login);
+authenticationRouter.post("/logout", mustBeLoggedIn, logout);
 
 module.exports = authenticationRouter;

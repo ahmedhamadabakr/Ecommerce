@@ -1,0 +1,25 @@
+Features:
+- Authentication
+  - Register (Signup)
+  - Login (Signin)
+  - Logout
+
+- Users
+  - Get all users (Pagination)
+  - Get user by id
+  - Update user
+  - Delete user
+
+- Products
+  - Get all products (Pagination)
+  - Get product by id
+  - Create product
+  - Update product
+  - Delete product
+
+- Orders
+  - Get all orders By Status (Pagination)
+  - Get order by id
+  - Create order
+  - Update order
+  - Delete order

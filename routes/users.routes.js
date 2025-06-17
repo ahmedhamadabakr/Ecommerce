@@ -1,19 +1,23 @@
-// - Users
-//   - Get all users (Pagination)
-//   - Get user by id
-//   - Update user
-//   - Delete user
+const express = require("express");
+const {
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+} = require("../controllers/users.controller");
 
-const express = require('express');
-const usersController = require('../controllers/users.controller');
-const userRouter = express.Router();
+const usersRouter = express.Router();
 
-userRouter.get('/api/users', usersController.getAllUsers);
+// get all users
+usersRouter.get("/api/users", getAllUsers);
 
-userRouter.get('/api/users/:id', usersController.getUserById);
+// get user by id
+usersRouter.get("/api/users/:userId", getUserById);
 
-userRouter.put('/api/users/:id', usersController.updateUser);
+// update user
+usersRouter.put("/api/update/:userId", updateUser);
 
-userRouter.delete('/api/users/:id', usersController.deleteUser);
+// delete user
+usersRouter.delete("/api/delete/:userId", deleteUser);
 
-module.exports = userRouter;
+module.exports = usersRouter;
