@@ -44,13 +44,7 @@ A Node.js RESTful API for an ecommerce platform, built with Express and MongoDB.
    ```bash
    npm install
    ```
-3. (Optional) Set environment variables in a `.env` file:
 
-   ```env
-   JWT_SECRET=your-super-secret-key-123
-   EXPIRES_IN=7d
-   MONGODB_URI=mongodb://localhost:27017/ecommerce
-   ```
 
    > By default, the app uses hardcoded values for JWT and connects to `mongodb://localhost:27017/ecommerce`.
 
